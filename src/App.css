@@ -1,3 +1,11 @@
+body {
+  dispaly: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #424242;
+}
+
+
 .main-container {
   display: flex;
   flex-direction: column;
