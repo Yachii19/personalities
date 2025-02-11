@@ -1,10 +1,12 @@
 body {
+  background-color: #f5f5f5;
+}
+
+#root {
   dispaly: flex;
   align-items: center;
   justify-content: center;
-  background-color: #424242;
 }
-
 
 .main-container {
   display: flex;
