@@ -1,13 +1,46 @@
-import { useState } from 'react';
-import { hollywoodArtistList } from './data.tsx';
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
+
+interface Artist {
+  id: number;
+  name: string;
+  description: string;
+  url: string;
+  alt: string;
+}
 
 export default function Gallery() {
   const [index, setIndex] = useState(0);
   const [showMore, setShowMore] = useState(false);
-  const hasNext = index < hollywoodArtistList.length - 1;
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch artists from Java backend
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/vinuya/personalities');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setArtists(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtists();
+  }, []);
+
+  const hasNext = artists.length > 0 && index < artists.length - 1;
 
   function handleNextClick() {
+    if (artists.length === 0) return;
+    
     if (hasNext) {
       setIndex(index + 1);
     } else {
@@ -16,8 +49,10 @@ export default function Gallery() {
   }
 
   function handleBackClick() {
-    if (index == 0) {
-      setIndex(hollywoodArtistList.length - 1);
+    if (artists.length === 0) return;
+    
+    if (index === 0) {
+      setIndex(artists.length - 1);
     } else {
       setIndex(index - 1);
     }
@@ -27,7 +62,20 @@ export default function Gallery() {
     setShowMore(!showMore);
   }
 
-  let sculpture = hollywoodArtistList[index];
+  if (loading) {
+    return <div className="main-container">Loading artists...</div>;
+  }
+
+  if (error) {
+    return <div className="main-container">Error: {error}</div>;
+  }
+
+  if (artists.length === 0) {
+    return <div className="main-container">No artists found</div>;
+  }
+
+  const currentArtist = artists[index];
+
   return (
     <>
       <div className='main-container'>
@@ -44,10 +92,10 @@ export default function Gallery() {
         </div>
         
         <h2 className='artist-name'>
-          <i >{sculpture.name} </i>
+          <i>{currentArtist.name}</i>
         </h2>
         <h3 className='index-count'>
-          ({index + 1} of {hollywoodArtistList.length})
+          ({index + 1} of {artists.length})
         </h3>
         <div>
           <button onClick={handleMoreClick} className='details-button'>
@@ -55,13 +103,12 @@ export default function Gallery() {
           </button>
         </div>
         
-        {showMore && <p>{sculpture.description}</p>}
+        {showMore && <p>{currentArtist.description}</p>}
         <img
-          src={sculpture.url}
-          alt={sculpture.alt}
+          src={currentArtist.url}
+          alt={currentArtist.alt}
         />
       </div>
-
     </>
   );
 }
